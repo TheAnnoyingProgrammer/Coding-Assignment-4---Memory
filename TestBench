@@ -1,0 +1,103 @@
+`timescale 1ns/1ps
+
+module MWBTB;
+
+    reg         clk;
+    reg         MemWrite, MemRead, m_ctlout, Zero;
+    reg [1:0]   WB;
+    reg [4:0]   WriteReg_in;
+    reg [31:0]  ALU_Result;
+    reg [31:0]  ReadData2;
+
+    wire [31:0] WriteData;
+    wire [4:0]  WriteReg_out;
+    wire        RegWrite_out, MemtoReg_out, PCSrc;
+
+    MemWB dut (
+        .clk(clk),
+        .MemWrite(MemWrite),
+        .MemRead(MemRead),
+        .m_ctlout(m_ctlout),
+        .Zero(Zero),
+        .WB(WB),
+        .WriteReg_in(WriteReg_in),
+        .ALU_Result(ALU_Result),
+        .ReadData2(ReadData2),
+        .WriteData(WriteData),
+        .WriteReg_out(WriteReg_out),
+        .RegWrite_out(RegWrite_out),
+        .MemtoReg_out(MemtoReg_out),
+        .PCSrc(PCSrc)
+    );
+
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    initial begin
+        MemWrite    = 0;
+        MemRead     = 0;
+        m_ctlout    = 0;
+        Zero        = 0;
+        WB          = 2'b00;
+        WriteReg_in = 0;
+        ALU_Result  = 0;
+        ReadData2   = 0;
+
+        #10;
+
+        // 0x000AA905 -> [0x4]
+        MemWrite   = 1;
+        MemRead    = 0;
+        WB         = 2'b00;
+        ALU_Result = 32'h00000004;
+        ReadData2  = 32'h000AA905;
+        #10;
+
+        // 0x000AA905 -> [0x8]
+        MemWrite   = 1;
+        MemRead    = 0;
+        WB         = 2'b00;
+        ALU_Result = 32'h00000008;
+        ReadData2  = 32'h0000AB1D;
+        #10;
+
+        // [0x4] -> 
+        MemWrite    = 0;
+        MemRead     = 1;
+        WB          = 2'b11;
+        WriteReg_in = 5'd5;
+        ALU_Result  = 32'h00000004;
+        #10;
+
+        // [0x8] -> 
+        MemWrite    = 0;
+        MemRead     = 1;
+        WB          = 2'b11;
+        WriteReg_in = 5'd6;
+        ALU_Result  = 32'h00000008;
+        #10;
+
+        //00000020 -> [0x8]
+        MemWrite    = 0;
+        MemRead     = 0;
+        WB          = 2'b10;
+        WriteReg_in = 5'd3;
+        ALU_Result  = 32'h00000020;
+        ReadData2   = 32'h00000000;
+        #10;
+
+        // 0ECE4300 -> [0x8]
+        MemWrite    = 0;
+        MemRead     = 0;
+        WB          = 2'b10;
+        WriteReg_in = 5'd10;
+        ALU_Result  = 32'h0ECE4300;
+        ReadData2   = 32'h00000000;
+        #10;
+
+        $finish;
+    end
+
+endmodule
